@@ -5,7 +5,7 @@ const EventEmitter = require('events').EventEmitter;
 const taiko = rewire('../../lib/taiko.js');
 chai.use(chaiAsPromised);
 const expect = chai.expect;
-let { openBrowser, goto, textBox, closeBrowser, write, into, toLeftOf, setConfig } = require('../../lib/taiko');
+let { openBrowser, goto, text, textBox, closeBrowser, write, into, toLeftOf, setConfig } = require('../../lib/taiko');
 let { createHtml, removeFile, openBrowserArgs } = require('./test-util');
 let test_name = 'write';
 
@@ -87,7 +87,7 @@ describe(test_name, () => {
     });
 });
 
-describe('write test on multiple similar elements', () => {
+describe.only('write test on multiple similar elements', () => {
     let readonlyFilePath;
     before(async () => {
         let innerHtml = '<div>' +
@@ -202,3 +202,28 @@ describe('Write with hideText option', () => {
         await validatePromise;
     });
 });
+
+describe('write into contenteditable field', () => {
+    let filePath;
+
+    before(async () => {
+        let innerHtml = `
+<div>Editable Demo</div>
+<p contenteditable="true">This is a paragraph and it's editable! Try to change this text!</p>`;
+
+        filePath = createHtml(innerHtml, test_name);
+        await openBrowser(openBrowserArgs);
+        await goto(filePath);
+    });
+
+    after(async () => {
+        removeFile(filePath);
+        await setConfig({ waitForNavigation: true });
+        await closeBrowser();
+    });
+
+    it('should write into contenteditable field', async () => {
+        await write('test data', into(text('This is a')));
+    });
+});
+
